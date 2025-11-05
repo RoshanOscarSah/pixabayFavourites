@@ -1,8 +1,27 @@
 import '../../domain/entities/image_item.dart';
 import '../../domain/repositories/favorites_repository.dart';
+import '../data_sources/local_data_source.dart';
 
 class FavoritesRepositoryImpl implements FavoritesRepository {
+  final LocalDataSource localDataSource;
   final Map<int, ImageItem> _favorites = <int, ImageItem>{};
+  bool _initialized = false;
+
+  FavoritesRepositoryImpl(this.localDataSource);
+
+  Future<void> _ensureInitialized() async {
+    if (!_initialized) {
+      final List<ImageItem> favorites = await localDataSource.getFavorites();
+      for (final ImageItem item in favorites) {
+        _favorites[item.id] = item;
+      }
+      _initialized = true;
+    }
+  }
+
+  Future<void> _saveToStorage() async {
+    await localDataSource.saveFavorites(_favorites.values.toList(growable: false));
+  }
 
   @override
   List<ImageItem> getFavorites() {
@@ -15,29 +34,41 @@ class FavoritesRepositoryImpl implements FavoritesRepository {
   }
 
   @override
-  void addFavorite(ImageItem item) {
+  Future<void> addFavorite(ImageItem item) async {
+    await _ensureInitialized();
     if (!_favorites.containsKey(item.id)) {
       _favorites[item.id] = item;
+      await _saveToStorage();
     }
   }
 
   @override
-  void removeFavorite(int id) {
-    _favorites.remove(id);
+  Future<void> removeFavorite(int id) async {
+    await _ensureInitialized();
+    if (_favorites.remove(id) != null) {
+      await _saveToStorage();
+    }
   }
 
   @override
-  void toggleFavorite(ImageItem item) {
+  Future<void> toggleFavorite(ImageItem item) async {
+    await _ensureInitialized();
     if (isFavorite(item.id)) {
-      removeFavorite(item.id);
+      await removeFavorite(item.id);
     } else {
-      addFavorite(item);
+      await addFavorite(item);
     }
   }
 
   @override
-  void clearFavorites() {
+  Future<void> clearFavorites() async {
+    await _ensureInitialized();
     _favorites.clear();
+    await _saveToStorage();
+  }
+
+  Future<void> loadFavorites() async {
+    await _ensureInitialized();
   }
 }
 

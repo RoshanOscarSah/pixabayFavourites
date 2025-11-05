@@ -20,26 +20,50 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   final TextEditingController _controller = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   List<ImageItem> _results = <ImageItem>[];
   bool _loading = false;
+  bool _loadingMore = false;
   String? _error;
+  String? _currentQuery;
+  int _currentPage = 1;
+  bool _hasMorePages = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
 
   @override
   void dispose() {
     _controller.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent * 0.8) {
+      _loadMore();
+    }
   }
 
   Future<void> _doSearch() async {
     final String q = _controller.text.trim();
     if (q.isEmpty) return;
+    
     setState(() {
       _loading = true;
       _error = null;
+      _currentQuery = q;
+      _currentPage = 1;
+      _hasMorePages = true;
+      _results = <ImageItem>[];
     });
 
     final Either<Failure, List<ImageItem>> result = await widget
-        .searchImagesUseCase(q);
+        .searchImagesUseCase(q, page: _currentPage);
     if (!mounted) return;
 
     result.fold(
@@ -53,6 +77,37 @@ class _SearchPageState extends State<SearchPage> {
         setState(() {
           _results = images;
           _loading = false;
+          _hasMorePages = images.length >= 20;
+        });
+      },
+    );
+  }
+
+  Future<void> _loadMore() async {
+    if (_loadingMore || !_hasMorePages || _currentQuery == null) return;
+
+    setState(() {
+      _loadingMore = true;
+    });
+
+    _currentPage++;
+    final Either<Failure, List<ImageItem>> result = await widget
+        .searchImagesUseCase(_currentQuery!, page: _currentPage);
+    
+    if (!mounted) return;
+
+    result.fold(
+      (Failure failure) {
+        setState(() {
+          _loadingMore = false;
+          _currentPage--;
+        });
+      },
+      (List<ImageItem> images) {
+        setState(() {
+          _results.addAll(images);
+          _loadingMore = false;
+          _hasMorePages = images.length >= 20;
         });
       },
     );
@@ -138,22 +193,31 @@ class _SearchPageState extends State<SearchPage> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: GridView.builder(
+                  controller: _scrollController,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     mainAxisSpacing: 12,
                     crossAxisSpacing: 12,
                     childAspectRatio: 0.95,
                   ),
-                  itemCount: _results.length,
+                  itemCount: _results.length + (_loadingMore ? 1 : 0),
                   itemBuilder: (context, index) {
+                    if (index == _results.length) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    }
                     final item = _results[index];
                     final bool selected = favorites.isFavorite(item.id);
                     return ImageGridItem(
                       item: item,
                       showSelectionOverlay: true,
                       selected: selected,
-                      onTap: () {
-                        favorites.toggle(item);
+                      onTap: () async {
+                        await favorites.toggle(item);
                         setState(() {});
                       },
                     );
@@ -242,6 +306,7 @@ class _SearchPageState extends State<SearchPage> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: GridView.builder(
+                    controller: _scrollController,
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
@@ -249,8 +314,16 @@ class _SearchPageState extends State<SearchPage> {
                           crossAxisSpacing: 12,
                           childAspectRatio: 0.95,
                         ),
-                    itemCount: _results.length,
+                    itemCount: _results.length + (_loadingMore ? 1 : 0),
                     itemBuilder: (context, index) {
+                      if (index == _results.length) {
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: CupertinoActivityIndicator(),
+                          ),
+                        );
+                      }
                       final item = _results[index];
                       final bool selected = favorites.isFavorite(item.id);
                       return ImageGridItem(

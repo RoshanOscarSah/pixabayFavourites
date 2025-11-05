@@ -16,10 +16,10 @@ class ImagesRepositoryImpl implements ImagesRepository {
   });
 
   @override
-  Future<Either<Failure, List<ImageItem>>> searchImages(String query, {int perPage = 20}) async {
+  Future<Either<Failure, List<ImageItem>>> searchImages(String query, {int perPage = 20, int page = 1}) async {
     if (await networkInfo.isConnected) {
       try {
-        final List<ImageItem> images = await remoteDataSource.searchImages(query, perPage: perPage);
+        final List<ImageItem> images = await remoteDataSource.searchImages(query, perPage: perPage, page: page);
         return Right(images);
       } on ServerException catch (e) {
         return Left(ServerFailure(e.message));

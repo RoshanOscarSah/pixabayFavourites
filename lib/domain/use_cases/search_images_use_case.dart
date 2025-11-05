@@ -8,8 +8,8 @@ class SearchImagesUseCase {
 
   SearchImagesUseCase(this.repository);
 
-  Future<Either<Failure, List<ImageItem>>> call(String query, {int perPage = 20}) {
-    return repository.searchImages(query, perPage: perPage);
+  Future<Either<Failure, List<ImageItem>>> call(String query, {int perPage = 20, int page = 1}) {
+    return repository.searchImages(query, perPage: perPage, page: page);
   }
 }
 

@@ -107,12 +107,12 @@ class HomePage extends StatelessWidget {
   }
 
   Future<void> _showRemoveDialog(BuildContext context, ImageItem item) async {
-    final bool? confirm = AppTheme.isIOS
+                      final bool? confirm = AppTheme.isIOS
         ? await _showCupertinoDialog(context)
         : await _showMaterialDialog(context);
 
     if (confirm == true && context.mounted) {
-      context.read<FavoritesProvider>().removeById(item.id);
+      await context.read<FavoritesProvider>().removeById(item.id);
     }
   }
 

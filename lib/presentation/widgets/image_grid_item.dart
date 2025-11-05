@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../domain/entities/image_item.dart';
 import '../../core/utils/format_bytes.dart';
 import '../theme/app_theme.dart';
@@ -43,15 +44,21 @@ class ImageGridItem extends StatelessWidget {
                   Positioned.fill(
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        item.previewURL,
+                      child: CachedNetworkImage(
+                        imageUrl: item.previewURL,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: Colors.grey[300],
-                            child: const Icon(Icons.error),
-                          );
-                        },
+                        placeholder: (context, url) => Container(
+                          color: Colors.grey[300],
+                          child: const Center(
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          color: Colors.grey[300],
+                          child: const Icon(Icons.error),
+                        ),
+                        memCacheWidth: 300,
+                        memCacheHeight: 300,
                       ),
                     ),
                   ),
@@ -113,17 +120,23 @@ class ImageGridItem extends StatelessWidget {
                   Positioned.fill(
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        item.previewURL,
+                      child: CachedNetworkImage(
+                        imageUrl: item.previewURL,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: CupertinoColors.systemGrey5,
-                            child: const Icon(
-                              CupertinoIcons.exclamationmark_circle,
-                            ),
-                          );
-                        },
+                        placeholder: (context, url) => Container(
+                          color: CupertinoColors.systemGrey5,
+                          child: const Center(
+                            child: CupertinoActivityIndicator(),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          color: CupertinoColors.systemGrey5,
+                          child: const Icon(
+                            CupertinoIcons.exclamationmark_circle,
+                          ),
+                        ),
+                        memCacheWidth: 300,
+                        memCacheHeight: 300,
                       ),
                     ),
                   ),

@@ -11,23 +11,28 @@ class FavoritesProvider extends ChangeNotifier {
 
   bool isFavorite(int id) => repository.isFavorite(id);
 
-  void add(ImageItem item) {
-    repository.addFavorite(item);
+  Future<void> loadFavorites() async {
+    await repository.loadFavorites();
     notifyListeners();
   }
 
-  void removeById(int id) {
-    repository.removeFavorite(id);
+  Future<void> add(ImageItem item) async {
+    await repository.addFavorite(item);
     notifyListeners();
   }
 
-  void toggle(ImageItem item) {
-    repository.toggleFavorite(item);
+  Future<void> removeById(int id) async {
+    await repository.removeFavorite(id);
     notifyListeners();
   }
 
-  void clear() {
-    repository.clearFavorites();
+  Future<void> toggle(ImageItem item) async {
+    await repository.toggleFavorite(item);
+    notifyListeners();
+  }
+
+  Future<void> clear() async {
+    await repository.clearFavorites();
     notifyListeners();
   }
 }

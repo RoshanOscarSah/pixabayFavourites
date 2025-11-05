@@ -7,7 +7,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 abstract class RemoteDataSource {
-  Future<List<ImageItem>> searchImages(String query, {int perPage = 20});
+  Future<List<ImageItem>> searchImages(String query, {int perPage = 20, int page = 1});
 }
 
 class RemoteDataSourceImpl implements RemoteDataSource {
@@ -16,9 +16,9 @@ class RemoteDataSourceImpl implements RemoteDataSource {
   RemoteDataSourceImpl(this.client);
 
   @override
-  Future<List<ImageItem>> searchImages(String query, {int perPage = 20}) async {
+  Future<List<ImageItem>> searchImages(String query, {int perPage = 20, int page = 1}) async {
     final Uri url = Uri.parse(
-      '${ApiConstants.baseUrl}?key=${AppConstants.pixabayApiKey}&q=${Uri.encodeQueryComponent(query)}&image_type=photo&per_page=$perPage&safesearch=true',
+      '${ApiConstants.baseUrl}?key=${AppConstants.pixabayApiKey}&q=${Uri.encodeQueryComponent(query)}&image_type=photo&per_page=$perPage&page=$page&safesearch=true',
     );
     
     try {
