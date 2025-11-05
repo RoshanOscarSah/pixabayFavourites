@@ -52,7 +52,7 @@ class _SearchPageState extends State<SearchPage> {
   Future<void> _doSearch() async {
     final String q = _controller.text.trim();
     if (q.isEmpty) return;
-    
+
     setState(() {
       _loading = true;
       _error = null;
@@ -75,7 +75,7 @@ class _SearchPageState extends State<SearchPage> {
       },
       (List<ImageItem> images) {
         setState(() {
-          _results = images;
+          _results = List<ImageItem>.from(images);
           _loading = false;
           _hasMorePages = images.length >= 20;
         });
@@ -93,7 +93,7 @@ class _SearchPageState extends State<SearchPage> {
     _currentPage++;
     final Either<Failure, List<ImageItem>> result = await widget
         .searchImagesUseCase(_currentQuery!, page: _currentPage);
-    
+
     if (!mounted) return;
 
     result.fold(
@@ -330,8 +330,8 @@ class _SearchPageState extends State<SearchPage> {
                         item: item,
                         showSelectionOverlay: true,
                         selected: selected,
-                        onTap: () {
-                          favorites.toggle(item);
+                        onTap: () async {
+                          await favorites.toggle(item);
                           setState(() {});
                         },
                       );
